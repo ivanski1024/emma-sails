@@ -41,8 +41,17 @@ module.exports = {
     let transactions = {};
     for (let index = 0; index < accounts.length; index++) {
       let account = accounts[index];
+      
+      let tl_account = await TLAccount.create(account).fetch();
+      
       let transactionsForAccount = (await DataAPIClient.getTransactions(tokens.access_token, account.account_id)).results;
-      transactions[account.account_id] = transactionsForAccount;
+      
+      for ( let tr_index = 0 ; tr_index < transactionsForAccount.length ; tr_index ++){
+        let transaction = transactionsForAccount[tr_index];
+        transaction['account'] = tl_account.id;
+        let tl_transaction = await TLTransaction.create(transaction);
+      }
+
     }
 
     // return transaction
