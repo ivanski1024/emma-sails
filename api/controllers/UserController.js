@@ -28,8 +28,11 @@ module.exports = {
     const tokens = await client.exchangeCodeForToken(redirect_uri, code);
     const info = await DataAPIClient.getInfo(tokens.access_token);
 
+    const tlAuthInfo = await TLAuthInfo.create(tokens).fetch();
+    const user = await User.create({tl_auth: tlAuthInfo.id}).fetch();
+
     res.set("Content-Type", "text/plain");
-    res.send(`Access Token: ${JSON.stringify(info, null, 2)}`);
+    res.send(`Access Token: ${JSON.stringify(user, null, 2)}`);
   }
 };
 
