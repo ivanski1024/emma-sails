@@ -19,7 +19,7 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  '/': { view: 'pages/homepage' },
+  '/': { redirect: '/register' },
 
 
   /***************************************************************************
@@ -33,5 +33,14 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
+  '/register': {
+    controller: 'UserController',
+    action: 'register'
+  },
+
+  '/callback': {
+    controller: 'UserController',
+    action: 'callback'
+  }
 
 };
