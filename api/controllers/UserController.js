@@ -28,11 +28,25 @@ module.exports = {
     const tokens = await client.exchangeCodeForToken(redirect_uri, code);
     const info = await DataAPIClient.getInfo(tokens.access_token);
 
+    // get auth info
     const tlAuthInfo = await TLAuthInfo.create(tokens).fetch();
+
+    // save use
     const user = await User.create({tl_auth: tlAuthInfo.id}).fetch();
 
-    res.set("Content-Type", "text/plain");
-    res.send(`Access Token: ${JSON.stringify(user, null, 2)}`);
+    // get accounts
+    let accounts = (await DataAPIClient.getAccounts(tokens.access_token)).results;
+    
+    // get transactions
+    let transactions = {};
+    for (let index = 0; index < accounts.length; index++) {
+      let account = accounts[index];
+      let transactionsForAccount = (await DataAPIClient.getTransactions(tokens.access_token, account.account_id)).results;
+      transactions[account.account_id] = transactionsForAccount;
+    }
+
+    // return transaction
+    res.ok(transactions);
   }
 };
 
