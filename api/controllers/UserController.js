@@ -56,6 +56,20 @@ module.exports = {
 
     // return transaction
     res.ok(transactions);
+  },
+  getTransactions: async function(req, res) {
+    let params = req.allParams();
+    let transactions = {};
+
+    let accounts = await TLAccount.find();
+
+    for (let acc_index = 0; acc_index < accounts.length; acc_index++) {
+      const account = accounts[acc_index];
+      let transactionsPerAccount = await TLTransaction.find({'account': account.id});
+      transactions[account.id] = transactionsPerAccount;
+    }
+
+    res.ok(transactions);
   }
 };
 

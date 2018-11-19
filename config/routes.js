@@ -41,6 +41,10 @@ module.exports.routes = {
   '/callback': {
     controller: 'UserController',
     action: 'callback'
+  },
+  '/getTransactions': {
+    controller: 'UserController',
+    action: 'getTransactions'
   }
 
 };
