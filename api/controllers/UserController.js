@@ -18,6 +18,9 @@ const client = new AuthAPIClient({
 });
 
 module.exports = {
+  root: function(req, res) {
+    res.redirect('http://localhost:1337/register');
+  },
   register: function(req, res){
     const nonce = crypto.randomBytes(12);
     const authURL = client.getAuthUrl(redirect_uri, scopes, nonce, null, null, true);
@@ -26,46 +29,47 @@ module.exports = {
   callback: async function(req,res){
     const code = req.query.code;
     const tokens = await client.exchangeCodeForToken(redirect_uri, code);
-    const info = await DataAPIClient.getInfo(tokens.access_token);
-
-    // get auth info
-    const tlAuthInfo = await TLAuthInfo.create(tokens).fetch();
-
-    // save use
-    const user = await User.create({tl_auth: tlAuthInfo.id}).fetch();
+    
+    // save user
+    const user = await User.create(tokens).fetch();
 
     // get accounts
     let accounts = (await DataAPIClient.getAccounts(tokens.access_token)).results;
     
-    // get transactions
-    let transactions = {};
     for (let index = 0; index < accounts.length; index++) {
       let account = accounts[index];
-      
-      let tl_account = await TLAccount.create(account).fetch();
+
+      let provider = await TLProvider.create(account.provider).fetch();
+      let accountNumber = await TLAccountNumber.create(account.account_number).fetch();
+
+      account.provider = provider.id;
+      account.account_number = accountNumber.id;
+      account.user = user.id;
+
+      let tlAccount = await TLAccount.create(account).fetch();
       
       let transactionsForAccount = (await DataAPIClient.getTransactions(tokens.access_token, account.account_id)).results;
       
       for ( let tr_index = 0 ; tr_index < transactionsForAccount.length ; tr_index ++){
         let transaction = transactionsForAccount[tr_index];
-        transaction['account'] = tl_account.id;
+        transaction['account'] = tlAccount.id;
         let tl_transaction = await TLTransaction.create(transaction);
       }
 
     }
 
     // return transaction
-    res.ok(transactions);
+    res.ok();
   },
   getTransactions: async function(req, res) {
-    let params = req.allParams();
+    let userId = req.params.userId;
     let transactions = {};
 
-    let accounts = await TLAccount.find();
+    const accounts = await TLAccount.find({user: userId});
 
-    for (let acc_index = 0; acc_index < accounts.length; acc_index++) {
-      const account = accounts[acc_index];
-      let transactionsPerAccount = await TLTransaction.find({'account': account.id});
+    for (let accountIndex = 0; accountIndex < accounts.length; accountIndex++) {
+      const account = accounts[accountIndex];
+      const transactionsPerAccount = await TLTransaction.find({'account': account.id});
       transactions[account.id] = transactionsPerAccount;
     }
 
