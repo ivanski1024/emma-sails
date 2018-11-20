@@ -27,66 +27,76 @@ module.exports = {
     res.redirect(authURL);
   },
   callback: async function(req,res){
-    const code = req.query.code;
-    const tokens = await client.exchangeCodeForToken(redirect_uri, code);
+    // get tokens
+    const tokens = await client.exchangeCodeForToken(redirect_uri,  req.query.code);
     
-    // save user
+    // create user
     const user = await User.create(tokens).fetch();
 
-    // get accounts
-    let accounts = (await DataAPIClient.getAccounts(tokens.access_token)).results;
-    
-    for (let index = 0; index < accounts.length; index++) {
-      let account = accounts[index];
+    // get accounts for user
+    const accounts = (await DataAPIClient.getAccounts(tokens.access_token)).results;
 
-      let provider = await TLProvider.create(account.provider).fetch();
-      let accountNumber = await TLAccountNumber.create(account.account_number).fetch();
+    let savedTransactionsCount = 0;
 
-      account.provider = provider.id;
-      account.account_number = accountNumber.id;
-      account.user = user.id;
-
-      let tlAccount = await TLAccount.create(account).fetch();
-      
+    await Promise.all(accounts.map(async (account) => {
       let transactionsForAccount = (await DataAPIClient.getTransactions(tokens.access_token, account.account_id)).results;
-      
-      for ( let tr_index = 0 ; tr_index < transactionsForAccount.length ; tr_index ++){
-        let transaction = transactionsForAccount[tr_index];
 
-        transaction['account'] = tlAccount.id;
-        // if(!transaction.merchant_name) {
-        //   console.log(transaction)
-        // }
-
-        if (transaction.meta) {
-          let meta = await TLTransactionMeta.create(transaction.meta).fetch();
-          transaction.meta = meta.id;
+      transactionsForAccount = await Promise.all(transactionsForAccount.map((transaction) => {
+        transaction = {
+          transaction_id: transaction.transaction_id,
+          account_id: account.account_id,
+          user_id: user.id,
+          amount: transaction.amount,
+          currency: transaction.currency,
+          transaction_type: transaction.transaction_type,
+          transaction_category: transaction.transaction_category,
+          timestamp: transaction.timestamp,
+          merchant_name: transaction.merchant_name ? transaction.merchant_name : '',
+          description: transaction.description ? transaction.description : '',
+          transaction_classification: transaction.transaction_classification ? transaction.transaction_classification.join(' ') : ''
         }
 
-        transaction.transaction_classification = transaction.transaction_classification.join(' ');
+        return transaction;
+      }))
 
-        let tl_transaction = await TLTransaction.create(transaction).fetch();
-      }
+      // bulk save transactions per account
+      let savedTransactionsForAccount = await TLTransaction.createEach(transactionsForAccount).fetch();
 
-    }
-
-    // return transaction
-    res.ok();
+      savedTransactionsCount += savedTransactionsForAccount.length;
+      
+      return account;
+    }));
+    
+    res.ok(`Saved ${savedTransactionsCount} transactions for this user`);
   },
   getTransactions: async function(req, res) {
-    let userId = req.params.userId;
-    let transactions = {};
+    let userId = req.query.userId;
+    let result = {}
 
-    const accounts = await TLAccount.find({user: userId});
+    const transactions = await TLTransaction.find({user_id: userId});
 
-    for (let accountIndex = 0; accountIndex < accounts.length; accountIndex++) {
-      const account = accounts[accountIndex];
-      const transactionsPerAccount = await TLTransaction.find({'account': account.id});
-      transactions[account.id] = transactionsPerAccount;
-      // console.log(transactionsPerAccount.length);
-    }
-    // console.log('-----')
-    res.ok(transactions.length);
+    await Promise.all(transactions.map(t => {
+      if(!result[t.account_id]) {
+        result[t.account_id] = []
+      }
+
+      result[t.account_id].push(t);
+    }))
+
+    res.ok(result);
+
+
+    // TODO: Check if this could work:
+    
+    // let queryStatment = `SELECT * FROM tltransaction t WHERE t.user_id = ${userId} GROUP BY t.account_id`;
+
+    // TLTransaction.sendNativeQuery(queryStatment, function(err, rawResult) {
+    //   if (err) { 
+    //     return res.serverError(err); 
+    //   }
+    
+    //   return res.ok(rawResult);
+    // });
   }
 };
 

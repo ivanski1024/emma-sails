@@ -9,6 +9,8 @@ module.exports = {
 
   attributes: {
     transaction_id: { type: 'string', required: true },
+    account_id: { type: 'string', required: true},
+    user_id: { type: 'string', required: true},
     amount: { type: 'integer', required: true},
     currency: { type: 'string', required: true },
     transaction_type: { type: 'string', required: true },
@@ -16,9 +18,7 @@ module.exports = {
     timestamp: { type: 'string', required: true },
     merchant_name: { type: 'string' },
     description: { type: 'string' },
-    transaction_classification: { type: 'string'},
-    account: { model:'TLAccount', required: true },
-    meta: { model: 'TLTransactionMeta' }
+    transaction_classification: { type: 'string'}
   },
 
 };

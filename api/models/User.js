@@ -9,8 +9,8 @@ module.exports = {
 
   attributes: {
     access_token: { type: 'string', columnType: 'varchar(1280)', required: true},
-    refresh_token: { type: 'string', required: true},
-    accounts: { collection: 'TLAccount', via: 'user' }
+    refresh_token: { type: 'string', required: true}
   },
 };
 
+  
