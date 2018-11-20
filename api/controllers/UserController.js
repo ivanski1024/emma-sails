@@ -52,8 +52,20 @@ module.exports = {
       
       for ( let tr_index = 0 ; tr_index < transactionsForAccount.length ; tr_index ++){
         let transaction = transactionsForAccount[tr_index];
+
         transaction['account'] = tlAccount.id;
-        let tl_transaction = await TLTransaction.create(transaction);
+        // if(!transaction.merchant_name) {
+        //   console.log(transaction)
+        // }
+
+        if (transaction.meta) {
+          let meta = await TLTransactionMeta.create(transaction.meta).fetch();
+          transaction.meta = meta.id;
+        }
+
+        transaction.transaction_classification = transaction.transaction_classification.join(' ');
+
+        let tl_transaction = await TLTransaction.create(transaction).fetch();
       }
 
     }
@@ -71,9 +83,10 @@ module.exports = {
       const account = accounts[accountIndex];
       const transactionsPerAccount = await TLTransaction.find({'account': account.id});
       transactions[account.id] = transactionsPerAccount;
+      // console.log(transactionsPerAccount.length);
     }
-
-    res.ok(transactions);
+    // console.log('-----')
+    res.ok(transactions.length);
   }
 };
 
