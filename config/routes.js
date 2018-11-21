@@ -36,16 +36,16 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  '/register': {
+  'GET /register': {
     controller: 'UserController',
     action: 'register'
   },
 
-  '/callback': {
+  'GET /callback': {
     controller: 'UserController',
     action: 'callback'
   },
-  '/getTransactions': {
+  'GET /transactions': {
     controller: 'UserController',
     action: 'getTransactions'
   }
