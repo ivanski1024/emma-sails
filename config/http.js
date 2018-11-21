@@ -10,7 +10,6 @@
  */
 
 module.exports.http = {
-
   /****************************************************************************
   *                                                                           *
   * Sails/Express middleware to run for every HTTP request.                   *
@@ -21,6 +20,26 @@ module.exports.http = {
   ****************************************************************************/
 
   middleware: {
+    order: [
+      'responseTimeLogger',
+      // ...
+    ],
+
+    // Using built-in variable defined by Sails
+    responseTimeLogger: function (req, res, next) {
+      req.on("end", function() {
+        sails.log.info('response time: ' + new Date() - req._startTime + 'ms');
+      });
+      next();
+    },
+
+    // Using response-time middleware
+    responseTimeLogger: function (req, res, next) {
+      req.on("end", function() {
+        sails.log.info('response time: ' + res.getHeader('X-Response-Time'));
+      });
+      require('response-time')()(req, res, next);
+    }
 
     /***************************************************************************
     *                                                                          *

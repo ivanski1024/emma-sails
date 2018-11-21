@@ -48,6 +48,10 @@ module.exports.routes = {
   'GET /transactions': {
     controller: 'UserController',
     action: 'getTransactions'
+  },
+  'GET /debugInformation': {
+    controller: 'UserController',
+    action: 'getDebugInformation'
   }
 
 };
