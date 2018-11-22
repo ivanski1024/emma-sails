@@ -4,7 +4,6 @@
 
 1. Node.js v10.x.x and npm v6.x.x
 2. MySQL v8.x 
-3. 
 
 ## GLOBAL PACKAGE DEPENDENCIES
 
@@ -28,7 +27,7 @@ cd emma-sails
 npm install
 ```
 
-3. Configure TrueLayer `client_id` and `client_secret` by creating such file: `<porject-directory/config/env/local.js` containing configuration looking like this:
+3. Configure TrueLayer `client_id` and `client_secret` by creating such file: `<porject-directory/config/local.js` containing configuration looking like this:
 
 ```javascript
 module.exports = {
