@@ -19,6 +19,46 @@ const client = new AuthAPIClient({
   client_secret: sails.config.client_secret
 });
 
+const refreshTokenIfExpired = async function (user) {
+
+  let tokenValid = await DataAPIClient.validateToken(user.access_token)
+
+  console.log(tokenValid);
+  if(!tokenValid) {
+
+    const newClient = new AuthAPIClient({
+      client_id: sails.config.client_id,
+      client_secret: sails.config.client_secret
+    });
+
+    let newTokens = await newClient.refreshAccessToken(user.refresh_token);
+
+    let updatedUser = (await User.update({user_id: user.user_id}).set({access_token: newTokens.results.access_token, refresh_token: newTokens.results.refresh_token})).fetch();
+
+    return updatedUser;
+  }
+
+  return;
+}
+const getUser = async function(req, res) {
+  let userId = req.query.userId;
+  if(!userId) { 
+    return res.badRequest('userId parameter required');
+  }
+
+  if(!validator.isUUID(userId)) { 
+    return res.badRequest('userId should be a uuid');
+  }
+
+  let user = await User.find({user_id: userId});
+
+  if(!user && !user.length != 1) {
+    return res.badRequest('invalid user id');
+  }
+
+  return user[0];
+}
+
 module.exports = {
   root: function(req, res) {
     res.redirect('http://localhost:1337/register');
@@ -28,14 +68,10 @@ module.exports = {
     const authURL = client.getAuthUrl(redirect_uri, scopes, nonce, null, null, true);
     res.redirect(authURL);
   },
-  callback: async function(req,res) {
-
+  callback: async function(req, res) {
     try {
       // get tokens
       const tokens = await client.exchangeCodeForToken(redirect_uri, req.query.code);
-      
-      // get info
-      let info = (await DataAPIClient.getInfo(tokens.access_token));
 
       // generate unique user id
       const user_id = uuidv4();
@@ -79,27 +115,13 @@ module.exports = {
       
       res.ok(user_id);
     } catch (err) {
-      console.log(err);
       res.ok(err);
     }
   },
   getTransactions: async function(req, res) {
-    let userId = req.query.userId;
-    if(!userId) { 
-      return res.badRequest('userId parameter required');
-    }
+    let user = await getUser(req, res);
 
-    if(!validator.isUUID(userId)) { 
-      return res.badRequest('userId should be a uuid');
-    }
-
-    let user = await User.find({user_id: userId});
-
-    if(!user) {
-      return res.badRequest('no such user');
-    }
-
-    const transactions = await TLTransaction.find({user_id: userId});
+    const transactions = await TLTransaction.find({user_id: user.user_id});
     let result = {}
 
     await transactions.map(t => {
@@ -113,17 +135,50 @@ module.exports = {
     return res.ok(result);
   },
   getDebugInformation: async function (req, res) {
-    let userId = validator.isUUID(req.query.userId);
-    if (!userId) { 
-      return res.badRequest('userId parameter required');
-    }
+    let user = await getUser(req, res);
 
-    if (typeof userId != 'number') { 
-      return res.badRequest('userId should be a number');
-    }
+    let refreshedUser = null;
 
-    return res.ok();
+    try {
+      refreshedUser = await refreshTokenIfExpired(user);
+    } catch (err) {
+      console.log(err)
+      res.serverError('Error when refreshing access token');
+    }
     
+    if (refreshedUser) { user = refreshedUser; }
+
+    let result = {};
+    let start = Date.now();
+
+    let accountsCallResult = await DataAPIClient.getAccounts(user.access_token);
+
+    result['accountsCall'] = {
+      executionTime: (Date.now() - start) + 'ms.'
+    }
+
+    if(accountsCallResult.error) {
+      result.accountsCall['error'] = accountsCallResult.error;
+    }
+
+    if (accountsCallResult.results) {
+      let accounts = accountsCallResult.results;
+      accounts.map(async (account) => {
+        start = Date.now();
+
+        let transactionsCallResult = await DataAPIClient.getTransactions(user.access_token, account.account_id)
+        
+        result['transactionsCall'] = {
+          executionTime: (Date.now() - start) + 'ms.'
+        }
+ 
+        if(transactionsCallResult.error) {
+          result.transactionsCallResult['error'] = accountsCallResult.error;
+        }
+      })
+    }
+
+    return res.ok(result);
   }
 };
 
