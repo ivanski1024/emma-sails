@@ -11,7 +11,7 @@ module.exports = {
     transaction_id: { type: 'string', required: true },
     account_id: { type: 'string', required: true},
     user_id: { type: 'string', required: true},
-    amount: { type: 'integer', required: true},
+    amount: { type: 'number', required: true},
     currency: { type: 'string', required: true },
     transaction_type: { type: 'string', required: true },
     transaction_category: { type: 'string', required: true },
