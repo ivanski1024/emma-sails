@@ -15,8 +15,8 @@ const scopes = ["info", "accounts", "balance", "transactions", "offline_access",
 
 // Create TrueLayer client instance
 const client = new AuthAPIClient({
-    "client_id": "emmatech-owm9",
-    "client_secret": "ito9uvheyfgaaya6da4eq"
+  client_id: sails.config.client_id,
+  client_secret: sails.config.client_secret
 });
 
 module.exports = {
