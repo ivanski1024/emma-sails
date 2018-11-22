@@ -148,34 +148,40 @@ module.exports = {
     
     if (refreshedUser) { user = refreshedUser; }
 
-    let result = {};
+    let result = { accountsCall: {} };
+    let accountsCallResult = null;
+    
     let start = Date.now();
-
-    let accountsCallResult = await DataAPIClient.getAccounts(user.access_token);
-
-    result['accountsCall'] = {
-      executionTime: (Date.now() - start) + 'ms.'
+    try {
+      accountsCallResult = await DataAPIClient.getAccounts(user.access_token);
+      result.accountsCall.executionTime = (Date.now() - start) + 'ms.';
+      result.accountsCall.status = 'SUCCEDED';
+    } catch (err) {
+      result.accountsCall.executionTime = (Date.now() - start) + 'ms.';
+      result.accountsCall.status = 'FAILED';
+      result.accountsCall.error = err.error;
+      result.accountsCall.message = err.message;
     }
 
-    if(accountsCallResult.error) {
-      result.accountsCall['error'] = accountsCallResult.error;
-    }
-
-    if (accountsCallResult.results) {
+    if (accountsCallResult) {
       let accounts = accountsCallResult.results;
-      accounts.map(async (account) => {
-        start = Date.now();
 
-        let transactionsCallResult = await DataAPIClient.getTransactions(user.access_token, account.account_id)
+      result.transactionCalls = {}
+      await Promise.all(accounts.map(async (account) => {
+        result.transactionCalls[account.account_id] = {};
         
-        result['transactionsCall'] = {
-          executionTime: (Date.now() - start) + 'ms.'
+        let t_start = Date.now();
+        try {
+          await DataAPIClient.getTransactions(user.access_token, account.account_id)
+          result.transactionCalls[account.account_id].executionTime = (Date.now() - t_start) + 'ms.';
+          result.transactionCalls[account.account_id].status = 'SUCCEDED';
+        } catch (err) {
+          result.transactionCalls[account.account_id].executionTime = (Date.now() - t_start) + 'ms.';
+          result.transactionCalls[account.account_id].status = 'FAILED'
+          result.transactionCalls[account.account_id].error = err.error;
+          result.transactionCalls[account.account_id].message = err.message;
         }
- 
-        if(transactionsCallResult.error) {
-          result.transactionsCallResult['error'] = accountsCallResult.error;
-        }
-      })
+      }))
     }
 
     return res.ok(result);
