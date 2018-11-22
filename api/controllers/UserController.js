@@ -43,17 +43,17 @@ const refreshTokenIfExpired = async function (user) {
 const getUser = async function(req, res) {
   let userId = req.query.userId;
   if(!userId) { 
-    return res.badRequest('userId parameter required');
+    return res.badRequest({error: 'userId parameter required'});
   }
 
   if(!validator.isUUID(userId)) { 
-    return res.badRequest('userId should be a uuid');
+    return res.badRequest({error: 'userId should be a uuid'});
   }
 
   let user = await User.find({user_id: userId});
 
   if(!user && !user.length != 1) {
-    return res.badRequest('invalid user id');
+    return res.badRequest({error: 'invalid user id'});
   }
 
   return user[0];
@@ -113,9 +113,9 @@ module.exports = {
         return account;
       });
       
-      res.ok(user_id);
+      res.ok({userId: user_id});
     } catch (err) {
-      res.ok(err);
+      res.serverError({error: err});
     }
   },
   getTransactions: async function(req, res) {
@@ -143,7 +143,7 @@ module.exports = {
       refreshedUser = await refreshTokenIfExpired(user);
     } catch (err) {
       console.log(err)
-      res.serverError('Error when refreshing access token');
+      res.serverError({error: 'Error when refreshing access token'});
     }
     
     if (refreshedUser) { user = refreshedUser; }
@@ -155,7 +155,7 @@ module.exports = {
     try {
       accountsCallResult = await DataAPIClient.getAccounts(user.access_token);
       result.accountsCall.executionTime = (Date.now() - start) + 'ms.';
-      result.accountsCall.status = 'SUCCEDED';
+      result.accountsCall.status = 'OK';
     } catch (err) {
       result.accountsCall.executionTime = (Date.now() - start) + 'ms.';
       result.accountsCall.status = 'FAILED';
@@ -168,13 +168,13 @@ module.exports = {
 
       result.transactionCalls = {}
       await Promise.all(accounts.map(async (account) => {
-        result.transactionCalls[account.account_id] = {};
+        result.transactionCalls[account.account_id] = {}; 
         
         let t_start = Date.now();
         try {
           await DataAPIClient.getTransactions(user.access_token, account.account_id)
           result.transactionCalls[account.account_id].executionTime = (Date.now() - t_start) + 'ms.';
-          result.transactionCalls[account.account_id].status = 'SUCCEDED';
+          result.transactionCalls[account.account_id].status = 'OK';
         } catch (err) {
           result.transactionCalls[account.account_id].executionTime = (Date.now() - t_start) + 'ms.';
           result.transactionCalls[account.account_id].status = 'FAILED'
