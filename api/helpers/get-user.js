@@ -26,7 +26,7 @@ module.exports = {
       throw new Error('invalid user id');
     }
     
-    let user = await User.find({user_id: params.userId});
+    let user = await User.find({userId: params.userId});
   
     if(!user && !user.length != 1) {
       throw new Error('no such user');

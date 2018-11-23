@@ -6,21 +6,19 @@
  */
 
 module.exports = {
-
   attributes: {
-    transaction_id: { type: 'string', required: true },
-    account_id: { type: 'string', required: true},
-    user_id: { type: 'string', required: true},
+    transactionId: { type: 'string', required: true },
+    accountId: { type: 'string', required: true},
+    userId: { type: 'string', required: true},
     amount: { type: 'number', required: true},
     currency: { type: 'string', required: true },
-    transaction_type: { type: 'string', required: true },
-    transaction_category: { type: 'string', required: true },
+    transactionType: { type: 'string', required: true },
+    transactionCategory: { type: 'string', required: true },
     timestamp: { type: 'string', required: true },
-    merchant_name: { type: 'string' },
+    merchantName: { type: 'string' },
     description: { type: 'string' },
-    transaction_classification: { type: 'string'},
-    bank_or_card: { type: 'string' }
+    transactionClassification: { type: 'string'},
+    parrentType: { type: 'string' }
   },
-
 };
 

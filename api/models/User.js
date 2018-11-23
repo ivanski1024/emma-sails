@@ -8,11 +8,11 @@
 module.exports = {
 
   attributes: {
-    user_id: {type: 'string', required: true},
-    access_token: { type: 'string', columnType: 'varchar(1280)', required: true},
-    refresh_token: { type: 'string', required: true},
+    userId: {type: 'string', required: true},
+    accessToken: { type: 'string', columnType: 'varchar(1280)', required: true},
+    refreshToken: { type: 'string', required: true},
     email: { type: 'string' },
-    full_name: { type: 'string' }
+    fullName: { type: 'string' }
   },
 };
 

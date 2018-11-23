@@ -21,48 +21,40 @@ module.exports = {
   },
   fn: async function (inputs) {
     try {
+      let accessToken = inputs.access_token;
+
       // get personal information 
       let personalInfo = 
-      (await sails.helpers.trueLayerCallWrapper( DataAPIClient.getInfo, { access_token: inputs.access_token }));
+      (await sails.helpers.trueLayerCallWrapper( DataAPIClient.getInfo, { accessToken }));
 
       // get bank accounts
       let accounts = 
-      (await sails.helpers.trueLayerCallWrapper( DataAPIClient.getAccounts, { access_token: inputs.access_token }));
+      (await sails.helpers.trueLayerCallWrapper( DataAPIClient.getAccounts, { accessToken }));
 
       let transactionsPerAccount = {};
 
       // for each bank account get transactions
       await Promise.all(await accounts.results.map(async (account) => {
+        let accountId = account.account_id;
         transactionsPerAccount[account.account_id] = 
-        (await sails.helpers.trueLayerCallWrapper( DataAPIClient.getTransactions, { 
-            access_token: inputs.access_token,
-            account_id: account.account_id 
-          }));
+        (await sails.helpers.trueLayerCallWrapper(DataAPIClient.getTransactions, { accessToken, accountId }));
       }));
 
       // get cards
       let cards = 
-      (await sails.helpers.trueLayerCallWrapper( DataAPIClient.getCards, { access_token: inputs.access_token }));
+      (await sails.helpers.trueLayerCallWrapper(DataAPIClient.getCards, { accessToken }));
 
       let transactionsPerCard = {};
       
       // for each card get transactions 
       await Promise.all(await cards.results.map(async (card) => {
-        transactionsPerCard[card.account_id] = 
-        (await sails.helpers.trueLayerCallWrapper( DataAPIClient.getCardTransactions, {
-            access_token: inputs.access_token,
-            account_id: card.account_id,
-          }));
+        let accountId = card.account_id;
+        transactionsPerCard[accountId] = 
+        (await sails.helpers.trueLayerCallWrapper( DataAPIClient.getCardTransactions, { accessToken, accountId }));
       }));
 
       // build result object
-      let userInfo = {
-        personalInfo,
-        accounts,
-        transactionsPerAccount,
-        cards,
-        transactionsPerCard,
-      }
+      let userInfo = { personalInfo, accounts, transactionsPerAccount, cards, transactionsPerCard, }
 
       return userInfo;
     } catch (err) {

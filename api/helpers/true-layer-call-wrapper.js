@@ -32,9 +32,9 @@ module.exports = {
     let params = inputs.params;
 
     try {
-      response = params.account_id ? 
-        await methodToCall(params.access_token, params.account_id) :
-        await methodToCall(params.access_token);
+      response = params.accountId ? 
+        await methodToCall(params.accessToken, params.accountId) :
+        await methodToCall(params.accessToken);
     } catch (err) {
       timing = Date.now() - start; 
   

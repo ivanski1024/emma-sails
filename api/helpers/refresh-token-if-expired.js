@@ -22,14 +22,25 @@ module.exports = {
   },
 
   fn: async function (inputs) {
-    let user = inputs.user;
     let client = inputs.client;
-    let isTokenValid = await DataAPIClient.validateToken(user.access_token);
+    let user = inputs.user;
     
+    // check if accessToken is still valid
+    let isTokenValid = await DataAPIClient.validateToken(user.accessToken);
+    
+    // if not refresh it and update db
     if(!isTokenValid) {
-      let newTokens = await client.refreshAccessToken(user.refresh_token);
+      // refresh tokens
+      let newTokens = null;
+      try {
+        let result = await client.refreshAccessToken(user.refreshToken).results;
+        newTokens = { accessToken: result.access_token, refreshToken: result.refresh_token };
+      } catch (err) {
+        return sails.helpers.handleError(err);
+      }
   
-      let updatedUser = await User.update({user_id: user.user_id}).set({access_token: newTokens.results.access_token, refresh_token: newTokens.results.refresh_token}).fetch();
+      let userId = inputs.user.userId;
+      let updatedUser = await User.update({userId}).set(newTokens).fetch();
   
       return updatedUser;
     }
