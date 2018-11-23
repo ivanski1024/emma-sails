@@ -5,14 +5,6 @@
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  */
 
-// General checks of code quality
-// 1. Variable names - they must be descriptive, camelCase.
-// 2. Line width : 80 characters
-// 3. Clear error handling
-// 4. API always returns objects with clear descriptions of what's inside
-// 5. Constants/settings in proper place - constants.js/global.js/local.js in sails.
-
-
 const {AuthAPIClient, DataAPIClient} = require("truelayer-client");
 const crypto = require('crypto');
 const uuidv4 = require('uuid/v4');
