@@ -18,7 +18,8 @@ module.exports = {
     timestamp: { type: 'string', required: true },
     merchant_name: { type: 'string' },
     description: { type: 'string' },
-    transaction_classification: { type: 'string'}
+    transaction_classification: { type: 'string'},
+    bank_or_card: { type: 'string' }
   },
 
 };

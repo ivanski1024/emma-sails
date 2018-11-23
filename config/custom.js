@@ -9,6 +9,11 @@
  */
 
 module.exports.custom = {
+  baseUrl: 'http://localhost:1337/',
+  trueLayer: {
+    scopes: ["info", "accounts", "balance", "transactions", "offline_access", "cards"],
+    enableMock: true
+  }
 
   /***************************************************************************
   *                                                                          *

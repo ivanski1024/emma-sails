@@ -19,12 +19,6 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  '/': {
-    controller: 'UserController',
-    action: 'root'
- },
-
-
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *
@@ -35,20 +29,22 @@ module.exports.routes = {
   * not match any of those, it is matched against static assets.             *
   *                                                                          *
   ***************************************************************************/
-
-  'GET /register': {
+ 
+  'GET /': {
     controller: 'UserController',
-    action: 'register'
+    action: 'root'
   },
 
   'GET /callback': {
     controller: 'UserController',
     action: 'callback'
   },
+
   'GET /transactions': {
     controller: 'UserController',
     action: 'getTransactions'
   },
+  
   'GET /debugInformation': {
     controller: 'UserController',
     action: 'getDebugInformation'
