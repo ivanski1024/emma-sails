@@ -1,20 +1,19 @@
 module.exports = {
-  friendlyName: 'Handle error',
-  description: 'Handles error from TrueLayer API',
+  friendlyName: "Handle error",
+  description: "Handles error from TrueLayer API",
   inputs: {
     error: {
-      type: 'ref',
+      type: "ref",
       required: true
     }
   },
   exits: {
     success: {
-      description: 'Parsed error object for Front-End or other system.',
-    },
+      description: "Parsed error object for Front-End or other system."
+    }
   },
-  fn: async function (inputs) {
+  fn: async function(inputs) {
     let err = inputs.error;
-    return {staus: 'fail', error: err.error, message: err.message}
+    return { staus: "fail", error: err.error, message: err.message };
   }
 };
-
